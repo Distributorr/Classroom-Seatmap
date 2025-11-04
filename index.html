@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Classroom Seatmap</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="app">
+
+    <header class="topbar">
+      <h1>Classroom Seatmap</h1>
+      <div class="controls">
+        <label class="select-label">
+          Template
+          <select id="templateSelect" aria-label="Templates">
+            <option value="full">Full grid</option>
+            <option value="u">U-Form (open at top)</option>
+            <option value="front-rows">Front rows only</option>
+          </select>
+        </label>
+
+        <button id="btnRandomize">Randomize</button>
+        <button id="btnClear">Clear</button>
+      </div>
+    </header>
+
+    <main class="main">
+      <aside class="sidebar">
+        <section class="panel">
+          <h2>Add Students</h2>
+          <div class="form-row">
+            <input id="studentName" type="text" placeholder="Student name">
+            <button id="btnAdd">Add</button>
+          </div>
+
+          <label class="file">
+            Upload CSV (client)
+            <input id="csvFile" type="file" accept=".csv">
+          </label>
+          <p class="small">CSV: <code>name,email</code> (email optional)</p>
+        </section>
+
+        <section class="panel">
+          <h2>Students</h2>
+          <ul id="studentList" class="student-list" aria-label="Students"></ul>
+        </section>
+
+        <section class="panel">
+          <h2>Save / Export</h2>
+          <div class="buttons">
+            <button id="btnSaveLocal">Save (local)</button>
+            <button id="btnLoadLocal">Load (local)</button>
+            <button id="btnExportJSON">Export JSON</button>
+            <button id="btnExportCSV">Export CSV</button>
+            <button id="btnPrint">Print / Save as PDF</button>
+          </div>
+
+          <hr>
+
+          <h3>Server CSV Upload</h3>
+          <input id="serverCsvInput" type="file" accept=".csv">
+          <div style="margin-top:8px;">
+            <button id="btnUploadServer">Upload CSV → Server (AJAX)</button>
+            <button id="btnSaveServer">Save Layout to Server</button>
+          </div>
+
+          <div style="margin-top:10px;">
+            <label>Saved layouts
+              <select id="serverSavedList"></select>
+            </label>
+            <div style="margin-top:6px;">
+              <button id="btnLoadServer">Load selected</button>
+              <button id="btnListServer">Refresh list</button>
+            </div>
+          </div>
+        </section>
+      </aside>
+
+      <section class="workspace">
+        <div class="toolbar">
+          <label>Rows: <input id="rows" type="number" min="1" max="30" value="4"></label>
+          <label>Cols: <input id="cols" type="number" min="1" max="30" value="6"></label>
+          <label>Seat size (px): <input id="seatSize" type="number" min="30" max="120" value="64"></label>
+          <label>Gap (px): <input id="gapSize" type="number" min="0" max="40" value="16"></label>
+          <button id="btnApplyGrid">Apply Grid</button>
+        </div>
+
+        <div id="gridContainer" class="grid-container" tabindex="0" aria-label="Seat grid">
+          <!-- grid will be rendered here -->
+        </div>
+      </section>
+    </main>
+
+    <footer class="footer">Classroom Seatmap 2025</footer>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
