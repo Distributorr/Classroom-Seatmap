@@ -15,6 +15,7 @@
   const gapInput = document.getElementById('gapSize');
   const btnApplyGrid = document.getElementById('btnApplyGrid');
   const studentNameInput = document.getElementById('studentName');
+  const klassenNameInput = document.getElementById('klassenName').value;
   const btnAdd = document.getElementById('btnAdd');
   const studentList = document.getElementById('studentList');
   const csvFile = document.getElementById('csvFile');
@@ -214,7 +215,7 @@
       assignBtn.onclick = () => beginAssign(s.id);
 
       const delBtn = document.createElement('button');
-      delBtn.textContent = 'Del';
+      delBtn.textContent = 'Delete';
       delBtn.onclick = () => {
         // remove from students and from any seats
         state.students = state.students.filter(x => x.id !== s.id);
@@ -224,18 +225,13 @@
       };
 
       actions.appendChild(delBtn);
-      actions.appendChild(assignBtn);
       li.appendChild(actions);
       studentList.appendChild(li);
     });
   }
 
-  // assignMode: used when clicking "Assign" button in student list
-  let assignMode = null;
-  function beginAssign(studentId) {
-    assignMode = studentId;
-    alert('Click a seat to assign this student.');
-  }
+
+  
 
   // DRAG & DROP - robust swap or move
   function addDragToSeat(seatEl) {
@@ -474,40 +470,74 @@
   });
 
   // Print / Save as PDF (opens a printable page)
-  btnPrint.addEventListener('click', () => {
-    const w = window.open('', '_blank');
-    if (!w) return alert('Popup blocked. Allow popups for this site to print.');
-    // build simple printable HTML: a table representing rows/cols with seat names
-    let html = `<!doctype html><html><head><meta charset="utf-8"><title>Seatmap Print</title>`;
-    html += `<style>
-      body{font-family:Arial,Helvetica,sans-serif;color:#000;padding:10px}
-      table{border-collapse:collapse;width:100%}
-      td{border:1px solid #000;padding:8px;text-align:center;vertical-align:middle;height:60px}
-      .empty{background:#f8f8f8}
-    </style></head><body>`;
-    html += `<h2>Seatmap (${state.rows} × ${state.cols})</h2>`;
-    html += '<table>';
-    for (let r=0;r<state.rows;r++){
-      html += '<tr>';
-      for (let c=0;c<state.cols;c++){
-        const k = key(r,c);
-        if (!state.seatMask[k]) {
-          html += `<td class="empty"></td>`;
-        } else {
-          const sid = state.seats[k];
-          const s = sid ? (state.students.find(x=>x.id===sid) || {}) : {};
-          html += `<td>${s.name ? `<strong>${escapeHtml(s.name)}</strong><div style="font-size:11px;color:#666">${escapeHtml(s.email||'')}</div>` : ''}</td>`;
-        }
-      }
-      html += '</tr>';
+btnPrint.addEventListener('click', () => {
+  const w = window.open('', '_blank');
+  if (!w) return alert('Popup blocked. Allow popups for this site to print.');
+
+  // Klassenname aus Input holen
+  const klassenNameInput = document.getElementById('klassenName').value || 'Klasse';
+
+  let html = `<!doctype html><html><head><meta charset="utf-8"><title>Seatmap Print</title>`;
+  html += `<style>
+    body{
+      font-family:Arial,Helvetica,sans-serif;
+      color:#000;
+      padding:10px;
     }
-    html += '</table>';
-    html += `<script>window.onload=function(){setTimeout(()=>{window.print();},200);}</script>`;
-    html += '</body></html>';
-    w.document.open();
-    w.document.write(html);
-    w.document.close();
-  });
+    table{
+      border-collapse:collapse;
+      margin-top:20px;
+    }
+    td{
+      border:1px solid #000;
+      width:60px;
+      height:60px;
+      text-align:center;
+      vertical-align:middle;
+      padding:0;
+      box-sizing:border-box;
+      overflow:hidden;
+      white-space:nowrap;
+    }
+    .empty{ background:#f8f8f8; }
+    .seatName{ font-weight:bold; display:block; }
+    .seatEmail{ font-size:11px; color:#666; display:block; }
+  </style></head><body>`;
+
+  html += `<h2>${escapeHtml(klassenNameInput)} – Sitzplan (${state.rows} × ${state.cols})</h2>`;
+
+  
+  html += '<table>';
+  for (let r = 0; r < state.rows; r++) {
+    html += '<tr>';
+    for (let c = 0; c < state.cols; c++) {
+      const k = key(r,c);
+      if (!state.seatMask[k]) {
+        html += `<td class="empty"></td>`;
+      } else {
+        const sid = state.seats[k];
+        const s = sid ? (state.students.find(x => x.id === sid) || {}) : {};
+        
+        html += `<td>`;
+        if (s.name) {
+          html += `<span class="seatName">${escapeHtml(s.name)}</span>`;
+          html += `<span class="seatEmail">${escapeHtml(s.email || '')}</span>`;
+        }
+        html += `</td>`;
+      }
+    }
+    html += '</tr>';
+  }
+  html += '</table>';
+
+  html += `<script>window.onload = function(){ setTimeout(() => { window.print(); }, 200); }</script>`;
+  html += '</body></html>';
+
+  w.document.open();
+  w.document.write(html);
+  w.document.close();
+});
+
 
   // escape helper
   function escapeHtml(s = '') {
