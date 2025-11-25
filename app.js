@@ -472,77 +472,151 @@
   // Print / Save as PDF (opens a printable page)
 btnPrint.addEventListener('click', () => {
   const w = window.open('', '_blank');
-  if (!w) return alert('Popup blocked. Allow popups for this site to print.');
+  if (!w) return alert('Popup blockiert. Bitte Popups erlauben.');
 
-  // Klassenname aus Input holen
-  const klassenNameInput = document.getElementById('klassenName').value || 'Klasse';
+  const klassenName = document.getElementById('klassenName').value || 'Klasse';
 
-  let html = `<!doctype html><html><head><meta charset="utf-8"><title>Seatmap Print</title>`;
-  html += `<style>
-    body{
-      font-family:Arial,Helvetica,sans-serif;
-      color:#000;
-      padding:10px;
-    }
-    table{
-      border-collapse:collapse;
-      margin-top:20px;
-    }
-    td{
-      border:1px solid #000;
-      width:60px;
-      height:60px;
-      text-align:center;
-      vertical-align:middle;
-      padding:0;
-      box-sizing:border-box;
-      overflow:hidden;
-      white-space:nowrap;
-    }
-    .empty{ background:#f8f8f8; }
-    .seatName{ font-weight:bold; display:block; }
-    .seatEmail{ font-size:11px; color:#666; display:block; }
-  </style></head><body>`;
+  let html = `
+  <!doctype html>
+  <html>
+  <head>
+    <meta charset="utf-8">
+    <title>Sitzplan</title>
+    <style>
+      /* --- GENERAL PAGE LAYOUT --- */
+      body {
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+        color: #111;
+        margin: 0;
+        padding: 40px 60px;
+        background: #fff;
+      }
 
-  html += `<h2>${escapeHtml(klassenNameInput)} – Sitzplan (${state.rows} × ${state.cols})</h2>`;
+      h1 {
+        font-size: 28px;
+        font-weight: 600;
+        letter-spacing: -0.3px;
+        margin-bottom: 6px;
+      }
 
-  
-  html += '<table>';
+      .subinfo {
+        font-size: 14px;
+        color: #666;
+        margin-bottom: 28px;
+      }
+
+      /* --- TABLE / SEAT GRID --- */
+      table {
+        border-collapse: collapse;
+        margin-top: 20px;
+        width: auto;
+      }
+
+      td {
+        border: 1px solid #e5e5e5;
+        width: 70px;
+        height: 70px;
+        text-align: center;
+        vertical-align: middle;
+        border-radius: 8px;
+        background: #fafafa;
+        padding: 0;
+        overflow: hidden;
+      }
+
+      td:not(.empty):hover {
+        background: #f2f2f2;
+      }
+
+      .empty {
+        background: #ffffff;
+        border: 1px dashed #ddd;
+      }
+
+      .seatName {
+        display: block;
+        font-size: 14px;
+        font-weight: 600;
+        color: #111;
+        margin-bottom: 3px;
+        letter-spacing: -0.2px;
+      }
+
+      .seatEmail {
+        display: block;
+        font-size: 11px;
+        color: #777;
+        letter-spacing: 0;
+      }
+
+      /* --- PRINT --- */
+      @media print {
+        body {
+          padding: 20px 40px;
+        }
+
+        td {
+          page-break-inside: avoid;
+        }
+      }
+    </style>
+  </head>
+  <body>
+
+    <h1>${escapeHtml(klassenName)} – Sitzplan</h1>
+    <div class="subinfo">${state.rows} Reihen × ${state.cols} Spalten</div>
+
+    <table>
+  `;
+
+  // Build seat grid
   for (let r = 0; r < state.rows; r++) {
-    html += '<tr>';
+    html += `<tr>`;
     for (let c = 0; c < state.cols; c++) {
-      const k = key(r,c);
-      if (!state.seatMask[k]) {
+      const k = key(r, c);
+      const isSeat = state.seatMask[k];
+      const sid = state.seats[k];
+      const student = sid ? (state.students.find(x => x.id === sid) || {}) : {};
+
+      if (!isSeat) {
         html += `<td class="empty"></td>`;
       } else {
-        const sid = state.seats[k];
-        const s = sid ? (state.students.find(x => x.id === sid) || {}) : {};
-        
         html += `<td>`;
-        if (s.name) {
-          html += `<span class="seatName">${escapeHtml(s.name)}</span>`;
-          html += `<span class="seatEmail">${escapeHtml(s.email || '')}</span>`;
+        if (student.name) {
+          html += `<span class="seatName">${escapeHtml(student.name)}</span>`;
+          html += `<span class="seatEmail">${escapeHtml(student.email || '')}</span>`;
         }
         html += `</td>`;
       }
     }
-    html += '</tr>';
+    html += `</tr>`;
   }
-  html += '</table>';
 
-  html += `<script>window.onload = function(){ setTimeout(() => { window.print(); }, 200); }</script>`;
-  html += '</body></html>';
+  html += `
+    </table>
+
+    <script>
+      window.onload = () => setTimeout(() => window.print(), 250);
+    </script>
+
+  </body>
+  </html>`;
 
   w.document.open();
   w.document.write(html);
   w.document.close();
 });
 
+function escapeHtml(s = '') {
+  return String(s).replace(/[&<>"']/g, m => ({
+    '&':'&amp;',
+    '<':'&lt;',
+    '>':'&gt;',
+    '"':'&quot;',
+    "'":'&#39;'
+  }[m]));
+}
 
-  // escape helper
-  function escapeHtml(s = '') {
-    return String(s).replace(/[&<>"']/g, (m) => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
-  }
 
   // Server CSV upload via AJAX (prevents page navigation)
   btnUploadServer.addEventListener('click', async () => {
@@ -693,3 +767,4 @@ btnPrint.addEventListener('click', () => {
   // window.sampleSeed = () => { addStudent('Alice'); addStudent('Bob'); addStudent('Carl'); assignUnplacedStudents(); buildGrid(); };
 
 })();
+
