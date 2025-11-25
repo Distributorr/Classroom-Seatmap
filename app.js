@@ -413,9 +413,16 @@
   // save/load local
   btnSaveLocal.addEventListener('click', () => {
     const payload = {
-      rows: state.rows, cols: state.cols, seatSize: state.seatSize, gap: state.gap,
-      template: state.template, students: state.students, seats: state.seats
+      rows: state.rows,
+      cols: state.cols,
+      seatSize: state.seatSize,
+      gap: state.gap,
+      template: state.template,
+      students: state.students,
+      seats: state.seats,
+      classname: document.getElementById('klassenName').value || ''
     };
+
     localStorage.setItem('seatmap', JSON.stringify(payload));
     alert('Saved into localStorage');
   });
@@ -429,6 +436,9 @@
       state.template = p.template || 'full';
       state.students = p.students || [];
       state.seats = p.seats || {};
+      if (p.classname !== undefined) {
+        document.getElementById('klassenName').value = p.classname;
+      }
       // update controls
       rowsInput.value = state.rows; colsInput.value = state.cols; seatSizeInput.value = state.seatSize;
       gapInput.value = state.gap; templateSelect.value = state.template;
@@ -438,7 +448,6 @@
       alert('Failed to load saved layout: ' + err.message);
     }
   });
-
   // export JSON
   btnExportJSON.addEventListener('click', () => {
     const payload = {
@@ -767,4 +776,5 @@ function escapeHtml(s = '') {
   // window.sampleSeed = () => { addStudent('Alice'); addStudent('Bob'); addStudent('Carl'); assignUnplacedStudents(); buildGrid(); };
 
 })();
+
 
